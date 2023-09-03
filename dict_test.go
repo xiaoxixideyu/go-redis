@@ -3,25 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"hash/fnv"
 	"testing"
 )
-
-func GStrEqual(a, b *Gobj) bool {
-	if a.Type_ != GSTR || b.Type_ != GSTR {
-		return false
-	}
-	return a.StrVal() == b.StrVal()
-}
-
-func GStrHash(key *Gobj) int64 {
-	if key.Type_ != GSTR {
-		return 0
-	}
-	hash := fnv.New64()
-	hash.Write([]byte(key.StrVal()))
-	return int64(hash.Sum64())
-}
 
 func TestDict(t *testing.T) {
 	dict := DictCreate(DictType{HashFunc: GStrHash, EqualFunc: GStrEqual})
