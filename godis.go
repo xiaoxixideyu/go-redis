@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"hash/fnv"
 	"log"
 	"os"
@@ -65,6 +64,12 @@ var server GodisServer
 var cmdTable []GodisCommand = []GodisCommand{
 	{"get", GetCommand, 2},
 	{"set", SetCommand, 3},
+	{"strlen", StrlenCommand, 2},
+	{"incr", IncrCommand, 2},
+	{"incrby", IncrByCommand, 3},
+	{"decr", DecrCommand, 2},
+	{"decrby", DecrByCommand, 3},
+	{"del", DelCommand, 2},
 	{"expire", ExpireCommand, 3},
 }
 
@@ -125,45 +130,6 @@ func findKeyRead(key *Gobj) *Gobj {
 	return server.db.data.Get(key)
 }
 
-func GetCommand(client *GodisClient) {
-	key := client.args[1]
-	val := findKeyRead(key)
-	if val == nil {
-		client.AddReplyStr("$-1\r\n")
-	} else if val.Type_ != GSTR {
-		client.AddReplyStr("-ERR: wrong type\r\n")
-	} else {
-		str := val.StrVal()
-		client.AddReplyStr(fmt.Sprintf("$%d%s\r\n", len(str), str))
-	}
-}
-
-func SetCommand(client *GodisClient) {
-	key := client.args[1]
-	val := client.args[2]
-	if val.Type_ != GSTR {
-		client.AddReplyStr("-ERR: wrong type\r\n")
-		return
-	}
-	server.db.data.Set(key, val)
-	server.db.expire.Delete(key)
-	client.AddReplyStr("+OK\r\n")
-}
-
-func ExpireCommand(client *GodisClient) {
-	key := client.args[1]
-	val := client.args[2]
-	if val.Type_ != GSTR {
-		client.AddReplyStr("-ERR: wrong type\r\n")
-		return
-	}
-	expire := GetMsTime() + (val.IntVal() * 1000)
-	expObj := CreateFromInt(expire)
-	server.db.expire.Set(key, expObj)
-	expObj.DecrRefCount()
-	client.AddReplyStr("+OK\r\n")
-}
-
 func (client *GodisClient) findLineInQuery() (int, error) {
 	index := strings.Index(string(client.queryBuf[:client.queryLen]), "\r\n")
 	if index < 0 && client.queryLen > GODIS_MAX_INLINE {
@@ -181,7 +147,7 @@ func (client *GodisClient) getNumInQuery(start, end int) (int, error) {
 
 func lookupCommand(cmdStr string) *GodisCommand {
 	for _, c := range cmdTable {
-		if strings.Compare(cmdStr, c.name) == 0 {
+		if strings.EqualFold(cmdStr, c.name) {
 			return &c
 		}
 	}
@@ -197,10 +163,10 @@ func ProcessCommand(client *GodisClient) {
 	}
 	cmd := lookupCommand(cmdStr)
 	if cmd == nil {
-		client.AddReplyStr("-ERR: unknow command")
+		client.AddReplyStr("-ERR: unknow commandr\r\n")
 		resetClient(client)
 	} else if cmd.arity != len(client.args) {
-		client.AddReplyStr("-ERR: wrong number of args")
+		client.AddReplyStr("-ERR: wrong number of args\r\n")
 		resetClient(client)
 	} else {
 		cmd.proc(client)
