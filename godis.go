@@ -79,6 +79,7 @@ var cmdTable []GodisCommand = []GodisCommand{
 	{"rpush", RPushCommand, 3, true},
 	{"lpop", LPopCommand, 2, false},
 	{"rpop", RPopCommand, 2, false},
+	{"lrange", LRangeCommand, 4, false},
 
 	// common
 	{"del", DelCommand, 2, false},
@@ -345,8 +346,8 @@ func (client *GodisClient) AddReply(o *Gobj) {
 
 func (client *GodisClient) AddReplyStr(str string) {
 	o := CreateObject(GSTR, str)
+	defer o.DecrRefCount()
 	client.AddReply(o)
-	o.DecrRefCount()
 }
 
 func AcceptHandler(loop *AeLoop, fd int, extra interface{}) {

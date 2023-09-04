@@ -52,9 +52,9 @@ func SetExCommand(client *GodisClient) {
 	} else {
 		expire := GetMsTime() + duration*1000
 		expireObj := CreateFromInt(expire)
+		defer expireObj.DecrRefCount()
 		client.db.data.Set(key, val)
 		client.db.expire.Set(key, expireObj)
-		expireObj.DecrRefCount()
 		client.AddReplyStr("+OK\r\n")
 	}
 }
@@ -79,7 +79,7 @@ func IncrCommand(client *GodisClient) {
 func IncrByCommand(client *GodisClient) {
 	incrNum, err := strconv.ParseInt(client.args[2].StrVal(), 10, 64)
 	if err != nil {
-		client.AddReplyStr("-ERR: wrong type of args")
+		client.AddReplyStr("-ERR: wrong type of args\r\n")
 	} else {
 		NumberProcess(client, incrNum)
 	}
@@ -92,7 +92,7 @@ func DecrCommand(client *GodisClient) {
 func DecrByCommand(client *GodisClient) {
 	decrNum, err := strconv.ParseInt(client.args[2].StrVal(), 10, 64)
 	if err != nil {
-		client.AddReplyStr("-ERR: wrong type of args")
+		client.AddReplyStr("-ERR: wrong type of args\r\n")
 	} else {
 		NumberProcess(client, decrNum*-1)
 	}
@@ -108,10 +108,10 @@ func NumberProcess(client *GodisClient, diff int64) {
 	} else if num, err := strconv.ParseInt(val.StrVal(), 10, 64); err == nil {
 		num += diff
 		newVal := CreateFromInt(num)
+		defer newVal.DecrRefCount()
 		client.db.data.Set(key, newVal)
 		str := newVal.StrVal()
 		client.AddReplyStr(fmt.Sprintf("$%d %s\r\n", len(str), str))
-		newVal.DecrRefCount()
 	} else {
 		client.AddReplyStr("-ERR: Not a usable number\r\n")
 	}

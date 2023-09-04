@@ -1,5 +1,10 @@
 package main
 
+import (
+	"math/rand"
+	"time"
+)
+
 type Node struct {
 	Val  *Gobj
 	prev *Node
@@ -76,6 +81,27 @@ func (list *List) RPush(val *Gobj) {
 		list.tail = &n
 	}
 	list.length += 1
+}
+
+func (list *List) LRange(left, right int) *Node {
+	if list.Length() == 0 || left >= list.length || right < 0 {
+		return nil
+	}
+	if left < 0 {
+		left = 0
+	}
+	if right >= list.length {
+		right = list.length - 1
+	}
+	mod := right - left + 1
+	newRand := rand.New(rand.NewSource(time.Now().UnixNano()))
+	index := left + newRand.Intn(mod)
+	n := list.head
+	for index != 0 {
+		n = n.next
+		index--
+	}
+	return n
 }
 
 func (list *List) DelNode(n *Node) {
