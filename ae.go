@@ -181,7 +181,7 @@ func (loop *AeLoop) AeWait() (tes []*AeTimeEvent, fes []*AeFileEvent) {
 	}
 	var events [128]syscall.EpollEvent
 	n, err := syscall.EpollWait(loop.fileEventFd, events[:], int(timeout))
-	if err != nil {
+	if err != nil && err != syscall.EINTR {
 		log.Printf("epoll wait warnning: %v\n", err)
 	}
 	if n > 0 {

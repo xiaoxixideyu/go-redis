@@ -30,6 +30,35 @@ func SetCommand(client *GodisClient) {
 	client.AddReplyStr("+OK\r\n")
 }
 
+func SetNxCommand(client *GodisClient) {
+	key := client.args[1]
+	newVal := client.args[2]
+	oldVal := findKeyRead(key)
+	if oldVal != nil {
+		client.AddReplyStr("$-1\r\n")
+	} else {
+		server.db.data.Set(key, newVal)
+		server.db.expire.Delete(key)
+		client.AddReplyStr("+OK\r\n")
+	}
+}
+
+func SetExCommand(client *GodisClient) {
+	key := client.args[1]
+	val := client.args[3]
+	duration, err := strconv.ParseInt(client.args[2].StrVal(), 10, 64)
+	if err != nil {
+		client.AddReplyStr("-ERR: wrong type of expire\r\n")
+	} else {
+		expire := GetMsTime() + duration*1000
+		expireObj := CreateFromInt(expire)
+		client.db.data.Set(key, val)
+		client.db.expire.Set(key, expireObj)
+		expireObj.DecrRefCount()
+		client.AddReplyStr("+OK\r\n")
+	}
+}
+
 func StrlenCommand(client *GodisClient) {
 	key := client.args[1]
 	val := findKeyRead(key)
@@ -82,6 +111,7 @@ func NumberProcess(client *GodisClient, diff int64) {
 		client.db.data.Set(key, newVal)
 		str := newVal.StrVal()
 		client.AddReplyStr(fmt.Sprintf("$%d %s\r\n", len(str), str))
+		newVal.DecrRefCount()
 	} else {
 		client.AddReplyStr("-ERR: Not a usable number\r\n")
 	}

@@ -64,6 +64,8 @@ var server GodisServer
 var cmdTable []GodisCommand = []GodisCommand{
 	{"get", GetCommand, 2},
 	{"set", SetCommand, 3},
+	{"setnx", SetNxCommand, 3},
+	{"setex", SetExCommand, 4},
 	{"strlen", StrlenCommand, 2},
 	{"incr", IncrCommand, 2},
 	{"incrby", IncrByCommand, 3},
@@ -402,7 +404,7 @@ func main() {
 		return
 	}
 	server.aeLoop.AddFileEvent(server.fd, AE_READABLE, AcceptHandler, nil)
-	server.aeLoop.AddTimeEvent(AE_NORMAL, 100, ServerCron, nil)
+	server.aeLoop.AddTimeEvent(AE_NORMAL, 1000, ServerCron, nil)
 	log.Printf("godis server is up")
 	server.aeLoop.AeMain()
 }
