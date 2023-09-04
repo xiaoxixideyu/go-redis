@@ -51,6 +51,7 @@ func (list *List) Find(val *Gobj) *Node {
 func (list *List) LPush(val *Gobj) {
 	var n Node
 	n.Val = val
+	val.IncrRefCount()
 	if list.length == 0 {
 		list.head = &n
 		list.tail = &n
@@ -65,6 +66,7 @@ func (list *List) LPush(val *Gobj) {
 func (list *List) RPush(val *Gobj) {
 	var n Node
 	n.Val = val
+	val.IncrRefCount()
 	if list.length == 0 {
 		list.head = &n
 		list.tail = &n
@@ -85,6 +87,9 @@ func (list *List) DelNode(n *Node) {
 			n.next.prev = nil
 		}
 		list.head = n.next
+		if list.length == 1 {
+			list.tail = nil
+		}
 		n.next = nil
 	} else if n == list.tail {
 		if n.prev != nil {
@@ -102,6 +107,7 @@ func (list *List) DelNode(n *Node) {
 		n.next = nil
 		n.prev = nil
 	}
+	n.Val.DecrRefCount()
 	list.length -= 1
 }
 

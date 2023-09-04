@@ -35,6 +35,13 @@ func (o *Gobj) StrVal() string {
 	return o.Val_.(string)
 }
 
+func (o *Gobj) ListVal() *List {
+	if o.Type_ != GLIST {
+		return nil
+	}
+	return o.Val_.(*List)
+}
+
 func CreateFromInt(val int64) *Gobj {
 	return &Gobj{
 		Type_:    GSTR,

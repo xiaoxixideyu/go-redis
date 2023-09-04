@@ -55,25 +55,35 @@ type GodisClient struct {
 type CommandProc func(c *GodisClient)
 
 type GodisCommand struct {
-	name  string
-	proc  CommandProc
-	arity int
+	name          string
+	proc          CommandProc
+	arity         int
+	acceptVarArgs bool
 }
 
 var server GodisServer
 var cmdTable []GodisCommand = []GodisCommand{
-	{"get", GetCommand, 2},
-	{"set", SetCommand, 3},
-	{"setnx", SetNxCommand, 3},
-	{"setex", SetExCommand, 4},
-	{"strlen", StrlenCommand, 2},
-	{"incr", IncrCommand, 2},
-	{"incrby", IncrByCommand, 3},
-	{"decr", DecrCommand, 2},
-	{"decrby", DecrByCommand, 3},
-	{"del", DelCommand, 2},
-	{"expire", ExpireCommand, 3},
-	{"ttl", TtlCommand, 2},
+	// string
+	{"get", GetCommand, 2, false},
+	{"set", SetCommand, 3, false},
+	{"setnx", SetNxCommand, 3, false},
+	{"setex", SetExCommand, 4, false},
+	{"strlen", StrlenCommand, 2, false},
+	{"incr", IncrCommand, 2, false},
+	{"incrby", IncrByCommand, 3, false},
+	{"decr", DecrCommand, 2, false},
+	{"decrby", DecrByCommand, 3, false},
+
+	// list
+	{"lpush", LPushCommand, 3, true},
+	{"rpush", RPushCommand, 3, true},
+	{"lpop", LPopCommand, 2, false},
+	{"rpop", RPopCommand, 2, false},
+
+	// common
+	{"del", DelCommand, 2, false},
+	{"expire", ExpireCommand, 3, false},
+	{"ttl", TtlCommand, 2, false},
 }
 
 func CreateClient(fd int) *GodisClient {
@@ -168,7 +178,10 @@ func ProcessCommand(client *GodisClient) {
 	if cmd == nil {
 		client.AddReplyStr("-ERR: unknow commandr\r\n")
 		resetClient(client)
-	} else if cmd.arity != len(client.args) {
+	} else if !cmd.acceptVarArgs && cmd.arity != len(client.args) {
+		client.AddReplyStr("-ERR: wrong number of args\r\n")
+		resetClient(client)
+	} else if cmd.acceptVarArgs && cmd.arity > len(client.args) {
 		client.AddReplyStr("-ERR: wrong number of args\r\n")
 		resetClient(client)
 	} else {
