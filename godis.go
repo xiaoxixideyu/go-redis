@@ -71,6 +71,7 @@ var cmdTable []GodisCommand = []GodisCommand{
 	{"decrby", DecrByCommand, 3},
 	{"del", DelCommand, 2},
 	{"expire", ExpireCommand, 3},
+	{"ttl", TtlCommand, 2},
 }
 
 func CreateClient(fd int) *GodisClient {
