@@ -42,6 +42,13 @@ func (o *Gobj) ListVal() *List {
 	return o.Val_.(*List)
 }
 
+func (o *Gobj) DictVal() *Dict {
+	if o.Type_ != GDICT {
+		return nil
+	}
+	return o.Val_.(*Dict)
+}
+
 func CreateFromInt(val int64) *Gobj {
 	return &Gobj{
 		Type_:    GSTR,

@@ -81,6 +81,12 @@ var cmdTable []GodisCommand = []GodisCommand{
 	{"rpop", RPopCommand, 2, false},
 	{"lrange", LRangeCommand, 4, false},
 
+	// dict
+	{"hset", HSetCommand, 4, false},
+	{"hget", HGetCommand, 3, false},
+	{"hmset", HMSetCommand, 4, true},
+	{"hmget", HMGetCommand, 3, true},
+
 	// common
 	{"del", DelCommand, 2, false},
 	{"expire", ExpireCommand, 3, false},
