@@ -86,6 +86,12 @@ var cmdTable []GodisCommand = []GodisCommand{
 	{"hget", HGetCommand, 3, false},
 	{"hmset", HMSetCommand, 4, true},
 	{"hmget", HMGetCommand, 3, true},
+	{"hlen", HLenCommand, 2, false},
+	{"hkeys", HKeysCommand, 2, false},
+	{"hincrby", HIncrByCommand, 4, false},
+	{"hgetall", HGetAllCommand, 2, false},
+	{"hexists", HExistsCommand, 3, false},
+	{"hsetnx", HSetNxCommand, 4, false},
 
 	// common
 	{"del", DelCommand, 2, false},

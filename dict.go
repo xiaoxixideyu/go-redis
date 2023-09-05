@@ -297,3 +297,92 @@ func (dict *Dict) RandomGet() *Entry {
 	}
 	return entry
 }
+
+func (dict *Dict) GetUsed() int64 {
+	if dict.isRehashing() {
+		return dict.hts[0].used + dict.hts[1].used
+	}
+	return dict.hts[0].used
+}
+
+func (dict *Dict) GetAllKey() []string {
+	var keys []string
+	if dict.isRehashing() {
+		used1, used2 := dict.hts[0].used, dict.hts[1].used
+		keys = make([]string, used1+used2)
+		index := 0
+		for i := int64(0); i < dict.hts[0].size && used1 > 0; i++ {
+			entry := dict.hts[0].table[i]
+			for entry != nil {
+				keys[index] = entry.Key.StrVal()
+				index++
+				entry = entry.next
+				used1--
+			}
+		}
+		for i := int64(0); i < dict.hts[1].size && used2 > 0; i++ {
+			entry := dict.hts[1].table[i]
+			for entry != nil {
+				keys[index] = entry.Key.StrVal()
+				index++
+				entry = entry.next
+				used2--
+			}
+		}
+	} else {
+		used := dict.hts[0].used
+		keys = make([]string, used)
+		index := 0
+		for i := int64(0); i < dict.hts[0].size && used > 0; i++ {
+			entry := dict.hts[0].table[i]
+			for entry != nil {
+				keys[index] = entry.Key.StrVal()
+				index++
+				entry = entry.next
+				used--
+			}
+		}
+	}
+	return keys
+}
+
+func (dict *Dict) GetAllEntry() []*Entry {
+	var entries []*Entry
+	if dict.isRehashing() {
+		used1, used2 := dict.hts[0].used, dict.hts[1].used
+		entries = make([]*Entry, used1+used2)
+		index := 0
+		for i := int64(0); i < dict.hts[0].size && used1 > 0; i++ {
+			entry := dict.hts[0].table[i]
+			for entry != nil {
+				entries[index] = entry
+				index++
+				entry = entry.next
+				used1--
+			}
+		}
+		for i := int64(0); i < dict.hts[1].size && used2 > 0; i++ {
+			entry := dict.hts[1].table[i]
+			for entry != nil {
+				entries[index] = entry
+				index++
+				entry = entry.next
+				used2--
+			}
+		}
+	} else {
+		used := dict.hts[0].used
+		entries = make([]*Entry, used)
+		index := 0
+		for i := int64(0); i < dict.hts[0].size && used > 0; i++ {
+			entry := dict.hts[0].table[i]
+			for entry != nil {
+				entries[index] = entry
+				index++
+				entry = entry.next
+				used--
+			}
+		}
+	}
+	return entries
+}
